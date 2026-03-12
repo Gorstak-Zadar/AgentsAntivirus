@@ -76,7 +76,9 @@ function Invoke-WebcamGuardian {
         try {
             $webcamRegKeys = @(
                 "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\webcam",
-                "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\webcam"
+                "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\webcam",
+                "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\microphone",
+                "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\microphone"
             )
             
             foreach ($regKey in $webcamRegKeys) {
@@ -93,11 +95,12 @@ function Invoke-WebcamGuardian {
                         foreach ($app in $appAccess) {
                             # Check if app is suspicious
                             if ($app.Name -notmatch 'microsoft|windows|explorer|chrome|firefox|edge|teams|zoom|skype') {
-                                $detections += @{
+                                $deviceType = if ($regKey -match 'microphone') { "Microphone" } else { "Webcam" }
+                            $detections += @{
                                     RegistryKey = $regKey
                                     AppName = $app.Name
                                     Access = $app.Value
-                                    Type = "Suspicious App with Webcam Access"
+                                    Type = "Suspicious App with $deviceType Access"
                                     Risk = "High"
                                 }
                             }

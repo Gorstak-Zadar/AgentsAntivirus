@@ -80,13 +80,27 @@ function Invoke-FirewallRuleMonitoring {
                 $ruleFilters = Get-NetFirewallAddressFilter -AssociatedNetFirewallRule $rule -ErrorAction SilentlyContinue
                 $ruleAppFilters = Get-NetFirewallApplicationFilter -AssociatedNetFirewallRule $rule -ErrorAction SilentlyContinue
                 
-                # Check for rules allowing all traffic
+                # Check for rules allowing all remote addresses
                 if ($ruleFilters) {
                     if ($ruleFilters.RemoteAddress -eq "*" -and $rule.Action -eq "Allow") {
                         $detections += @{
                             RuleName = $rule.Name
                             RemoteAddress = $ruleFilters.RemoteAddress
                             Type = "Firewall Rule Allows All Traffic"
+                            Risk = "High"
+                        }
+                    }
+                }
+                
+                # Check for inbound rules allowing ANY program (overly permissive)
+                if ($ruleAppFilters -and $rule.Direction -eq "Inbound" -and $rule.Action -eq "Allow") {
+                    $prog = $ruleAppFilters.Program
+                    if ($null -eq $prog -or $prog -eq "*" -or $prog -eq "Any") {
+                        $detections += @{
+                            RuleName = $rule.Name
+                            Direction = "Inbound"
+                            Program = if ($prog) { $prog } else { "(Any)" }
+                            Type = "Inbound Rule Allows Any Program"
                             Risk = "High"
                         }
                     }
@@ -150,6 +164,14 @@ function Invoke-FirewallRuleMonitoring {
                         ProfileName = $profile.Name
                         Type = "Firewall Profile Disabled"
                         Risk = "Critical"
+                    }
+                }
+                if ($profile.DefaultInboundAction -ne "Block") {
+                    $detections += @{
+                        ProfileName = $profile.Name
+                        DefaultInbound = "$($profile.DefaultInboundAction)"
+                        Type = "Firewall Default Inbound Not Set to Block"
+                        Risk = "High"
                     }
                 }
             }

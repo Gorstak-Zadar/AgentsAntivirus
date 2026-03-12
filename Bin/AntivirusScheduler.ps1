@@ -42,7 +42,8 @@ $moduleScripts = @(
     "AsrRules.ps1", "GRulesC2Block.ps1", "ProcessAuditing.ps1", "KeyScramblerManagement.ps1",
     "GFocus.ps1",
     "PasswordRotator.ps1", "GSecurityLite.ps1", "NeuroBehaviorMonitor.ps1",
-    "StartupPersistenceDetection.ps1", "SuspiciousParentChildDetection.ps1", "ScriptBlockLoggingCheck.ps1"
+    "StartupPersistenceDetection.ps1", "SuspiciousParentChildDetection.ps1", "ScriptBlockLoggingCheck.ps1",
+    "PerformanceTweaks.ps1"
 )
 
 foreach ($m in $moduleScripts) {
@@ -176,6 +177,7 @@ $schedule = @(
     @{ Name = 'StartupPersistenceDetection'; Interval = 120; Invoke = 'Invoke-StartupPersistenceScan' }
     @{ Name = 'SuspiciousParentChildDetection'; Interval = 45; Invoke = 'Invoke-SuspiciousParentChildScan' }
     @{ Name = 'ScriptBlockLoggingCheck'; Interval = 86400; Invoke = 'Invoke-ScriptBlockLoggingCheck' }
+    @{ Name = 'PerformanceTweaks'; Interval = 86400; Invoke = 'Invoke-PerformanceTweaks' }
 )
 
 if ($UnregisterSchedule) {
