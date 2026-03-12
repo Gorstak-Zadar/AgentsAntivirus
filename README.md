@@ -1,8 +1,8 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Windows-64--bit-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Windows">
   <img src="https://img.shields.io/badge/PowerShell-5.1+-5391FE?style=for-the-badge&logo=powershell" alt="PowerShell">
-  <img src="https://img.shields.io/badge/Version-13.3-00C853?style=for-the-badge" alt="v13.3">
-  <img src="https://img.shields.io/badge/Agents-94+-00C853?style=for-the-badge" alt="94+ Agents">
+  <img src="https://img.shields.io/badge/Version-13.5-00C853?style=for-the-badge" alt="v13.5">
+  <img src="https://img.shields.io/badge/Agents-100+-00C853?style=for-the-badge" alt="100+ Agents">
 </p>
 
 <h1 align="center">AgentsAntivirus</h1>
@@ -146,7 +146,7 @@ AgentsAntivirus/
 | `LocalProxyDetection` | 60s | Proxy/tunneling detection |
 | `GFocus` | 2s | Browser-focused network monitoring |
 | `WMIPhoneHomeDetection` | 60s | WMI process phone-home attempts |
-| `FirewallRuleMonitoring` | 60s | Firewall rule tampering |
+| `FirewallRuleMonitoring` | 60s | Firewall profile status, default actions, overly permissive inbound rules |
 
 ### System & Devices (9 agents)
 
@@ -155,7 +155,7 @@ AgentsAntivirus/
 | `RootkitDetection` | 60s | Hidden processes, kernel anomalies |
 | `ShadowCopyMonitoring` | 30s | VSS deletion (ransomware indicator) |
 | `USBMonitoring` | 30s | USB device connections |
-| `WebcamGuardian` | 20s | Unauthorized webcam access |
+| `WebcamGuardian` | 20s | Unauthorized webcam and microphone access |
 | `MobileDeviceMonitoring` | 90s | MTP/PTP device monitoring |
 | `ClipboardMonitoring` | 10s | Clipboard data theft |
 | `BrowserExtensionMonitoring` | 60s | Malicious browser extensions |
@@ -174,6 +174,19 @@ AgentsAntivirus/
 | `ScriptBlockLoggingCheck` | 86400s | PowerShell logging validation |
 | `ResponseEngine` | 180s | Centralized response engine |
 | `MitreMapping` | 300s | MITRE ATT&CK correlation |
+
+### Performance & System Optimization (1 agent)
+
+| Agent | Interval | Description |
+|-------|----------|-------------|
+| `PerformanceTweaks` | Daily | GPU scheduling, MMCSS games profile, network throttling, Nagle disable, power throttling, timer resolution, GameDVR disable, High Performance power plan |
+
+### Hardening & Auditing (2 agents)
+
+| Agent | Interval | Description |
+|-------|----------|-------------|
+| `ProcessAuditing` | Daily | Enables audit policies: process creation, logon/logoff, special logon, account lockout, command-line logging |
+| `AsrRules` | Daily | Attack Surface Reduction rule enforcement |
 
 ### Privacy & Special (7 agents)
 
@@ -256,7 +269,8 @@ Invoke-Command -ComputerName target -ScriptBlock {
 
 | Module | Purpose |
 |--------|---------|
-| `OptimizedConfig.ps1` | Tick intervals, scan limits, logging, deduplication |
+| `OptimizedConfig.ps1` | CPU-aware adaptive scheduling, tick intervals, logging, deduplication |
+| `AntivirusScheduler.ps1` | Main orchestrator — runs all agents on their configured intervals |
 | `CacheManager.ps1` | File hash caching, signature caching, process caching |
 | `Initializer.ps1` | Directory creation, log setup, config initialization |
 
@@ -301,7 +315,7 @@ This will:
 ---
 
 <p align="center">
-  <strong>AgentsAntivirus v13.3</strong> | Detection Agents from GEDR | Author: Gorstak
+  <strong>AgentsAntivirus v13.5</strong> | Detection Agents from GEDR | Author: Gorstak
 </p>
 
 <p align="center">
