@@ -86,6 +86,7 @@ AgentsAntivirus/
 | `RansomwareDetection` | 15s | Ransom notes, shadow copy deletion, encryption patterns |
 | `YaraDetection` | 120s | YARA rule-based signature scanning |
 | `FileEntropyDetection` | 120s | High-entropy file detection (packed/encrypted) |
+| `HeadersCheck` | 180s | Zombie ZIP (CVE-2026-0866), malicious header patterns |
 | `AdvancedThreatDetection` | 60s | Scans high-risk paths for suspicious files |
 | `RealTimeFileMonitor` | 60s | FileSystemWatcher for real-time file changes |
 | `PUPDetection` | 120s | Potentially Unwanted Programs (adware, toolbars) |
