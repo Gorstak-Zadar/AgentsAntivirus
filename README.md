@@ -188,6 +188,13 @@ AgentsAntivirus/
 | `ProcessAuditing` | Daily | Enables audit policies: process creation, logon/logoff, special logon, account lockout, command-line logging |
 | `AsrRules` | Daily | Attack Surface Reduction rule enforcement |
 
+### Companion Scripts (standalone, run separately)
+
+| Script | Description |
+|--------|-------------|
+| `SysmonFull.ps1` | Sysmon-style event logging to GEDR-SysmonFull (no MSFT skips). Run as Admin. |
+| `AutorunsEnhanced.ps1` | Autoruns + auto-remove unverified + untrusted font check. `-RemoveUnverified` to remove. |
+
 ### Privacy & Special (7 agents)
 
 | Agent | Interval | Description |
@@ -308,7 +315,9 @@ This will:
 
 | Project | Description |
 |---------|-------------|
-| [GEDR](../GEDR) | C# source — System tray EDR |
+| [GEDR](../GEDR) | C# source — System tray EDR (consumes SysmonFull logs via JobSysmonLogIngestion) |
+| [SysmonFull](../SysmonFull) | Sysmon-style event logging without MSFT skips |
+| [AutorunsEnhanced](../AutorunsEnhanced) | Autoruns + unverified removal + font check |
 | [GShield](../GShield) | Single-file EDR (built from this project) |
 | **AgentsAntivirus** | PowerShell agents (this project) |
 
