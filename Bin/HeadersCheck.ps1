@@ -1,5 +1,5 @@
-# Headers Check Module - Zombie ZIP (CVE-2026-0866) and malicious header detection
-# Scans all file headers in suspicious paths for stored+high-entropy ZIP payloads
+# Headers Check Module - Zombie ZIP (CVE-2026-0866), extension/magic mismatch, polyglots
+# Scans all file headers in suspicious paths for stored+high-entropy ZIP, PE disguised as doc/image, polyglot PE embedded in doc/image
 
 param([hashtable]$ModuleConfig)
 
@@ -37,6 +37,7 @@ function Invoke-HeadersCheckOptimized {
                 
                 foreach ($f in $files) {
                     $scanned++
+                    $rule = $null
                     $pathLower = $f.FullName.ToLower()
                     if ($pathLower -like '*\assembly\*' -or $pathLower -like '*\winsxs\*' -or $pathLower -like '*\microsoft.net\*') { continue }
                     
@@ -72,19 +73,47 @@ function Invoke-HeadersCheckOptimized {
                             if ($p -gt 0) { $ent -= $p * [Math]::Log($p, 2) }
                         }
                         if ($ent -ge $EntropyThreshold) {
-                            $detections += @{ FilePath = $f.FullName; Rule = "ZombieZip"; Entropy = [Math]::Round($ent, 2) }
+                            $rule = "ZombieZip"
+                            $detections += @{ FilePath = $f.FullName; Rule = $rule; Entropy = [Math]::Round($ent, 2) }
                             $logPath = "$env:ProgramData\Antivirus\Logs\headers_check_$(Get-Date -Format 'yyyy-MM-dd').log"
-                            "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')|ZombieZip|$($f.FullName)|Entropy:$([Math]::Round($ent,2))" | Add-Content -Path $logPath -ErrorAction SilentlyContinue
+                            "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')|$rule|$($f.FullName)|Entropy:$([Math]::Round($ent,2))" | Add-Content -Path $logPath -ErrorAction SilentlyContinue
                             break
                         }
                         $pos = $dataStart + $compSize - 1
+                    }
+                    if ($rule) { continue }
+                    $docImageExts = @('.pdf','.jpg','.jpeg','.png','.gif','.bmp','.txt','.doc','.docx','.rtf','.odt','.xls','.xlsx')
+                    $ext = [IO.Path]::GetExtension($f.FullName).ToLower()
+                    if ($docImageExts -contains $ext -and $buf.Length -ge 2 -and $buf[0] -eq 0x4D -and $buf[1] -eq 0x5A) {
+                        $rule = "ExtensionMagicMismatch"
+                        $detections += @{ FilePath = $f.FullName; Rule = $rule }
+                        $logPath = "$env:ProgramData\Antivirus\Logs\headers_check_$(Get-Date -Format 'yyyy-MM-dd').log"
+                        "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')|$rule|$($f.FullName)" | Add-Content -Path $logPath -ErrorAction SilentlyContinue
+                        continue
+                    }
+                    $polyglotScan = [Math]::Min(1024, $buf.Length - 2)
+                    $startsAsDoc = ($buf.Length -ge 4 -and $buf[0] -eq 0x25 -and $buf[1] -eq 0x50 -and $buf[2] -eq 0x44 -and $buf[3] -eq 0x46) -or
+                        ($buf.Length -ge 8 -and $buf[0] -eq 0x89 -and $buf[1] -eq 0x50 -and $buf[2] -eq 0x4E -and $buf[3] -eq 0x47) -or
+                        ($buf.Length -ge 4 -and $buf[0] -eq 0x47 -and $buf[1] -eq 0x49 -and $buf[2] -eq 0x46 -and $buf[3] -in 0x38,0x39) -or
+                        ($buf.Length -ge 3 -and $buf[0] -eq 0xFF -and $buf[1] -eq 0xD8 -and $buf[2] -eq 0xFF) -or
+                        ($buf.Length -ge 2 -and $buf[0] -eq 0x42 -and $buf[1] -eq 0x4D)
+                    if ($startsAsDoc) {
+                        for ($i = 2; $i -le $polyglotScan - 2; $i++) {
+                            if ($buf[$i] -eq 0x4D -and $buf[$i+1] -eq 0x5A) {
+                                $rule = "PolyglotPeEmbedded"
+                                $detections += @{ FilePath = $f.FullName; Rule = $rule }
+                                $logPath = "$env:ProgramData\Antivirus\Logs\headers_check_$(Get-Date -Format 'yyyy-MM-dd').log"
+                                "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')|$rule|$($f.FullName)" | Add-Content -Path $logPath -ErrorAction SilentlyContinue
+                                break
+                            }
+                        }
                     }
                 }
             } catch { }
         }
         
         if ($detections.Count -gt 0) {
-            Write-Output "DETECTION:$ModuleName`:Found $($detections.Count) Zombie ZIP / malicious header(s)"
+            Write-Output "DETECTION:$ModuleName`:Found $($detections.Count) malicious header(s) (ZombieZip/ExtensionMagicMismatch/PolyglotPeEmbedded)"
         }
         Write-Output "STATS:$ModuleName`:Scanned=$scanned"
     } catch {
