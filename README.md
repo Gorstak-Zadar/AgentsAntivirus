@@ -1,7 +1,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Windows-64--bit-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Windows">
   <img src="https://img.shields.io/badge/PowerShell-5.1+-5391FE?style=for-the-badge&logo=powershell" alt="PowerShell">
-  <img src="https://img.shields.io/badge/Version-13.5-00C853?style=for-the-badge" alt="v13.5">
+  <img src="https://img.shields.io/badge/Version-13.10-00C853?style=for-the-badge" alt="v13.10">
   <img src="https://img.shields.io/badge/Agents-100+-00C853?style=for-the-badge" alt="100+ Agents">
 </p>
 
@@ -86,7 +86,7 @@ AgentsAntivirus/
 | `RansomwareDetection` | 15s | Ransom notes, shadow copy deletion, encryption patterns |
 | `YaraDetection` | 120s | YARA rule-based signature scanning |
 | `FileEntropyDetection` | 120s | High-entropy file detection (packed/encrypted) |
-| `HeadersCheck` | 180s | Zombie ZIP, extension/magic mismatch, polyglot PE embedded |
+| `HeadersCheck` | 180s | Zombie ZIP, extension/magic mismatch, polyglot PE, steganography (Base64 PE in images, XWorm-style) |
 | `AdvancedThreatDetection` | 60s | Scans high-risk paths for suspicious files |
 | `RealTimeFileMonitor` | 60s | FileSystemWatcher for real-time file changes |
 | `PUPDetection` | 120s | Potentially Unwanted Programs (adware, toolbars) |

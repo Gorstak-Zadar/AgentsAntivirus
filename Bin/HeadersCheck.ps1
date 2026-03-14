@@ -1,5 +1,4 @@
-# Headers Check Module - Zombie ZIP (CVE-2026-0866), extension/magic mismatch, polyglots
-# Scans all file headers in suspicious paths for stored+high-entropy ZIP, PE disguised as doc/image, polyglot PE embedded in doc/image
+# Headers Check Module - Zombie ZIP, extension/magic mismatch, polyglots, steganography (Base64 PE in images, XWorm-style)
 
 param([hashtable]$ModuleConfig)
 
@@ -108,12 +107,39 @@ function Invoke-HeadersCheckOptimized {
                             }
                         }
                     }
+                    if ($rule) { continue }
+                    $stegMarker = [byte[]]@(0x3C,0x3C,0x42,0x41,0x53,0x45,0x36,0x34,0x5F,0x53,0x54,0x41,0x52,0x54,0x3E,0x3E)
+                    for ($mi = 0; $mi -le $buf.Length - $stegMarker.Length; $mi++) {
+                        $match = $true
+                        for ($mj = 0; $mj -lt $stegMarker.Length; $mj++) { if ($buf[$mi+$mj] -ne $stegMarker[$mj]) { $match = $false; break } }
+                        if (-not $match) { continue }
+                        $sb = [Text.StringBuilder]::new()
+                        for ($k = $mi + $stegMarker.Length; $k -lt $buf.Length -and $sb.Length -lt 140000; $k++) {
+                            $b = $buf[$k]
+                            if (($b -ge 0x41 -and $b -le 0x5A) -or ($b -ge 0x61 -and $b -le 0x7A) -or ($b -ge 0x30 -and $b -le 0x39) -or $b -eq 0x2B -or $b -eq 0x2F -or $b -eq 0x3D) { [void]$sb.Append([char]$b) }
+                            elseif ($b -in 0x0D,0x0A,0x20) { }
+                            else { break }
+                        }
+                        if ($sb.Length -ge 4) {
+                            try {
+                                $decoded = [Convert]::FromBase64String($sb.ToString())
+                                if ($decoded.Length -ge 2 -and $decoded[0] -eq 0x4D -and $decoded[1] -eq 0x5A) {
+                                    $rule = "SteganographyBase64Pe"
+                                    $detections += @{ FilePath = $f.FullName; Rule = $rule }
+                                    $logPath = "$env:ProgramData\Antivirus\Logs\headers_check_$(Get-Date -Format 'yyyy-MM-dd').log"
+                                    "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')|$rule|$($f.FullName)" | Add-Content -Path $logPath -ErrorAction SilentlyContinue
+                                    break
+                                }
+                            } catch { }
+                        }
+                        $mi += $stegMarker.Length - 1
+                    }
                 }
             } catch { }
         }
         
         if ($detections.Count -gt 0) {
-            Write-Output "DETECTION:$ModuleName`:Found $($detections.Count) malicious header(s) (ZombieZip/ExtensionMagicMismatch/PolyglotPeEmbedded)"
+            Write-Output "DETECTION:$ModuleName`:Found $($detections.Count) malicious header(s) (ZombieZip/ExtensionMagicMismatch/PolyglotPeEmbedded/SteganographyBase64Pe)"
         }
         Write-Output "STATS:$ModuleName`:Scanned=$scanned"
     } catch {
